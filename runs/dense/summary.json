@@ -1,0 +1,26 @@
+{
+  "name": "dense",
+  "config": {
+    "retrieval": "dense@5",
+    "model": "deepseek/deepseek-flash",
+    "judge": "deepseek/deepseek-flash"
+  },
+  "questions": 72,
+  "answerable": 60,
+  "out_of_scope": 12,
+  "accuracy": 75.0,
+  "answerable_accuracy": 70.0,
+  "partial": 5,
+  "wrong_shown": 12.5,
+  "over_escalation": 20.0,
+  "oos_escalated": 100.0,
+  "validator_blocks": 1,
+  "doc_hit": 78.3,
+  "chunk_hit": 68.3,
+  "mrr": 0.537,
+  "cost_usd": 0.0211,
+  "cost_per_q_usd": 0.00029,
+  "latency_p50_s": 1.61,
+  "latency_p95_s": 2.41,
+  "errors": 0
+}
