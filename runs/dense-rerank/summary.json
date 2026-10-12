@@ -1,0 +1,26 @@
+{
+  "name": "dense-rerank",
+  "config": {
+    "retrieval": "dense+rerank@5",
+    "model": "deepseek/deepseek-flash",
+    "judge": "deepseek/deepseek-flash"
+  },
+  "questions": 72,
+  "answerable": 60,
+  "out_of_scope": 12,
+  "accuracy": 88.9,
+  "answerable_accuracy": 86.7,
+  "partial": 2,
+  "wrong_shown": 3.7,
+  "over_escalation": 10.0,
+  "oos_escalated": 100.0,
+  "validator_blocks": 1,
+  "doc_hit": 90.0,
+  "chunk_hit": 78.3,
+  "mrr": 0.613,
+  "cost_usd": 0.0231,
+  "cost_per_q_usd": 0.00032,
+  "latency_p50_s": 4.19,
+  "latency_p95_s": 8.31,
+  "errors": 0
+}
