@@ -1,0 +1,27 @@
+{
+  "name": "bm25",
+  "config": {
+    "retrieval": "bm25@5",
+    "model": "deepseek/deepseek-flash",
+    "judge": "orca/google/gemini-3.8-flash",
+    "rejudged_from": "runs\\bm25"
+  },
+  "questions": 72,
+  "answerable": 60,
+  "out_of_scope": 12,
+  "accuracy": 90.3,
+  "answerable_accuracy": 88.3,
+  "partial": 3,
+  "wrong_shown": 8.6,
+  "over_escalation": 3.3,
+  "oos_escalated": 100.0,
+  "validator_blocks": 0,
+  "doc_hit": 90.0,
+  "chunk_hit": 83.3,
+  "mrr": 0.657,
+  "cost_usd": 0.068,
+  "cost_per_q_usd": 0.00094,
+  "latency_p50_s": 1.61,
+  "latency_p95_s": 2.04,
+  "errors": 0
+}

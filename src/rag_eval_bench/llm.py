@@ -1,5 +1,6 @@
-"""Minimal Anthropic-Messages client. The same wire format serves Claude (api.anthropic.com)
-and DeepSeek (its Anthropic-compatible endpoint), so swapping the model under test is a flag.
+"""Minimal Anthropic-Messages client. The same wire format serves Claude (api.anthropic.com),
+DeepSeek (its Anthropic-compatible endpoint) and Gemini through OrcaRouter, so swapping the model
+under test, or the judge, is a flag.
 
 Keys come only from the environment. Every call records tokens and latency so a run can
 report cost per question next to quality.
@@ -19,9 +20,13 @@ import httpx
 PROVIDERS = {
     "deepseek": ("https://api.deepseek.com/anthropic", "DEEPSEEK_API_KEY"),
     "anthropic": ("https://api.anthropic.com", "ANTHROPIC_API_KEY"),
+    # A router with an Anthropic-compatible endpoint; gives access to Gemini as an out-of-family judge.
+    "orca": ("https://api.orcarouter.ai", "ORCAROUTER_API_KEY"),
 }
 # USD per million tokens (input, output). Override with --price-in / --price-out.
-PRICES = {"deepseek-flash": (0.30, 1.20)}
+PRICES = {"deepseek-flash": (0.30, 1.20), "google/gemini-3.8-flash": (0.75, 3.75)}
+# Gemini spends part of max_tokens thinking before it writes; a small cap can cut the JSON off.
+MIN_TOKENS = {"orca": 2500}
 
 
 def env_key(name: str) -> str | None:
@@ -73,6 +78,7 @@ class LLM:
         return (input_tokens * self.price[0] + output_tokens * self.price[1]) / 1e6
 
     def complete(self, system: str, user: str, max_tokens: int = 800) -> tuple[str, dict]:
+        max_tokens = max(max_tokens, MIN_TOKENS.get(self.provider, 0))
         body = {"model": self.model, "max_tokens": max_tokens, "temperature": 0, "system": system,
                 "messages": [{"role": "user", "content": user}]}
         if self.provider == "deepseek":

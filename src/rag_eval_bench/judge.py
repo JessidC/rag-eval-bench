@@ -24,7 +24,10 @@ def grade(llm, question: str, reference: str, answer_text: str, answerable: bool
         return {"verdict": "escalated", "correct": False, "reason": "escalated an answerable question",
                 "judged_by": "rule", "meta": {}}
     user = f"Question: {question}\n\nReference answer: {reference}\n\nAssistant answer: {answer_text}"
-    data, meta = llm.complete_json(SYSTEM, user, max_tokens=300)
+    try:
+        data, meta = llm.complete_json(SYSTEM, user, max_tokens=300)
+    except ValueError:  # malformed JSON happens now and then; one retry before counting a miss
+        data, meta = llm.complete_json(SYSTEM, user, max_tokens=300)
     verdict = str(data.get("verdict", "")).lower().strip()
     if verdict not in ("correct", "partial", "incorrect"):
         verdict = "incorrect"

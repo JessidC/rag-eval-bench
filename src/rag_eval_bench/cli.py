@@ -1,4 +1,4 @@
-"""rageval: ingest, golden, run, compare, gate, report."""
+"""rageval: ingest, golden, run, rejudge, agreement, compare, gate, report."""
 from __future__ import annotations
 
 import argparse
@@ -53,6 +53,30 @@ def cmd_run(args):
     print(json.dumps(s, indent=2))
 
 
+def cmd_rejudge(args):
+    from .rejudge import rejudge
+    from .runner import read_golden
+
+    golden = read_golden(Path(args.golden))
+    judge = _llm(args, "judge_")
+    for run_dir in args.runs:
+        s = rejudge(Path(run_dir), golden, judge, Path(args.out), args.workers)
+        print(f"{s['name']}: accuracy {s['accuracy']}%, wrong shown {s['wrong_shown']}%, errors {s['errors']}")
+
+
+def cmd_agreement(args):
+    from .rejudge import agreement
+
+    r = agreement(Path(args.a), Path(args.b))
+    print(f"{r['n']} answers graded by an LLM in both runs")
+    print(f"correct vs not: {r['agree_correct']}% agree, kappa {r['kappa_correct']} "
+          f"(only A says correct: {r['a_only_correct']}, only B: {r['b_only_correct']})")
+    print(f"three verdicts: {r['agree_verdict']}% agree, kappa {r['kappa_verdict']}")
+    if args.show:
+        for d in r["disagreements"]:
+            print(f"  {d['id']}: {d['a']} -> {d['b']}  {d['b_reason']}")
+
+
 def cmd_compare(args):
     from .compare import compare, render_text
 
@@ -76,12 +100,12 @@ def main(argv=None):
     sub = p.add_subparsers(required=True)
 
     def llm_flags(sp, judge=False):
-        sp.add_argument("--provider", default="deepseek", choices=["deepseek", "anthropic"])
+        sp.add_argument("--provider", default="deepseek", choices=["deepseek", "anthropic", "orca"])
         sp.add_argument("--model", default="deepseek-flash")
         sp.add_argument("--price-in", type=float, help="USD per million input tokens")
         sp.add_argument("--price-out", type=float, help="USD per million output tokens")
         if judge:
-            sp.add_argument("--judge-provider", default="deepseek", choices=["deepseek", "anthropic"])
+            sp.add_argument("--judge-provider", default="deepseek", choices=["deepseek", "anthropic", "orca"])
             sp.add_argument("--judge-model", help="defaults to the model under test")
 
     s = sub.add_parser("ingest", help="chunk the docs and build the index")
@@ -111,6 +135,23 @@ def main(argv=None):
     s.add_argument("--limit", type=int)
     llm_flags(s, judge=True)
     s.set_defaults(fn=cmd_run)
+
+    s = sub.add_parser("rejudge", help="grade finished runs again with another judge; answers stay the same")
+    s.add_argument("runs", nargs="+")
+    s.add_argument("--golden", default="golden/golden.jsonl")
+    s.add_argument("--out", required=True)
+    s.add_argument("--workers", type=int, default=4)
+    s.add_argument("--judge-provider", required=True, choices=["deepseek", "anthropic", "orca"])
+    s.add_argument("--judge-model", required=True)
+    s.add_argument("--price-in", type=float, help="USD per million input tokens")
+    s.add_argument("--price-out", type=float, help="USD per million output tokens")
+    s.set_defaults(fn=cmd_rejudge)
+
+    s = sub.add_parser("agreement", help="how often two runs' judges agree on the same answers")
+    s.add_argument("a")
+    s.add_argument("b")
+    s.add_argument("--show", action="store_true", help="list each disagreement")
+    s.set_defaults(fn=cmd_agreement)
 
     s = sub.add_parser("compare", help="paired comparison of two runs")
     s.add_argument("baseline")

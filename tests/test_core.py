@@ -132,3 +132,53 @@ def test_gate_passes_unproven_gain(tmp_path):
     cand = [_row(i, True, "answered" if i < 6 else "escalated", i < 6) for i in range(10)]
     r = compare(_write_run(tmp_path, "a", base), _write_run(tmp_path, "b", cand))
     assert r["gate"]["pass"] and "not proven" in r["gate"]["verdict"]
+
+
+def test_kappa_and_agreement(tmp_path):
+    from rag_eval_bench.rejudge import agreement, cohen_kappa
+
+    assert cohen_kappa([True, False, True, False], [True, False, True, False]) == 1.0
+    assert cohen_kappa([True, True, False, False], [True, False, True, False]) == 0.0
+
+    def write(name, verdicts):
+        d = tmp_path / name
+        d.mkdir()
+        (d / "summary.json").write_text(json.dumps({"name": name, "config": {}}))
+        rows = [{"id": f"q{i}", "question": "q", "verdict": v, "reason": ""} for i, v in enumerate(verdicts)]
+        (d / "results.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
+        return d
+
+    a = write("a", ["correct", "correct", "partial", "escalated"])
+    b = write("b", ["correct", "incorrect", "partial", "escalated"])
+    r = agreement(a, b)
+    assert r["n"] == 3  # the rule-scored escalation is left out
+    assert r["a_only_correct"] == 1 and r["b_only_correct"] == 0
+
+
+def test_rejudge_keeps_answers_and_changes_only_verdicts(tmp_path):
+    from rag_eval_bench.rejudge import rejudge
+
+    class Strict:
+        provider, model = "fake", "strict"
+
+        def complete_json(self, system, user, max_tokens=300):
+            return {"verdict": "partial", "reason": "misses a step"}, {"cost_usd": 0.0}
+
+    run = tmp_path / "dense"
+    run.mkdir()
+    (run / "summary.json").write_text(json.dumps({"name": "dense", "config": {"retrieval": "dense"}}))
+    rows = [
+        {"id": "q1", "question": "How?", "answerable": True, "outcome": "answered", "answer": "Do X [1].",
+         "verdict": "correct", "correct": True, "reason": "", "problems": [], "doc_hit": True, "chunk_rank": 1,
+         "retrieval_s": 0.1, "answer_meta": {"latency_s": 1.0}, "judge_meta": {}, "error": None},
+        {"id": "q2", "question": "Weather?", "answerable": False, "outcome": "escalated", "answer": None,
+         "verdict": "correct", "correct": True, "reason": "", "problems": [], "doc_hit": None, "chunk_rank": None,
+         "retrieval_s": 0.1, "answer_meta": {"latency_s": 1.0}, "judge_meta": {}, "error": None},
+    ]
+    (run / "results.jsonl").write_text("\n".join(json.dumps(r) for r in rows))
+    golden = [{"id": "q1", "reference": "Do X then Y."}, {"id": "q2"}]
+    s = rejudge(run, golden, Strict(), tmp_path / "out")
+    new = [json.loads(line) for line in (tmp_path / "out" / "dense" / "results.jsonl").read_text().splitlines()]
+    assert new[0]["answer"] == "Do X [1]." and new[0]["verdict"] == "partial" and not new[0]["correct"]
+    assert new[1]["verdict"] == "correct"  # out of scope stays scored by rule
+    assert s["config"]["judge"] == "fake/strict" and s["accuracy"] == 50.0

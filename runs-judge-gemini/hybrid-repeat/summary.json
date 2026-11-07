@@ -1,0 +1,27 @@
+{
+  "name": "hybrid-repeat",
+  "config": {
+    "retrieval": "hybrid@5",
+    "model": "deepseek/deepseek-flash",
+    "judge": "orca/google/gemini-3.8-flash",
+    "rejudged_from": "runs\\hybrid-repeat"
+  },
+  "questions": 72,
+  "answerable": 60,
+  "out_of_scope": 12,
+  "accuracy": 87.5,
+  "answerable_accuracy": 85.0,
+  "partial": 2,
+  "wrong_shown": 7.3,
+  "over_escalation": 8.3,
+  "oos_escalated": 100.0,
+  "validator_blocks": 1,
+  "doc_hit": 90.0,
+  "chunk_hit": 85.0,
+  "mrr": 0.674,
+  "cost_usd": 0.0638,
+  "cost_per_q_usd": 0.00089,
+  "latency_p50_s": 1.59,
+  "latency_p95_s": 2.34,
+  "errors": 0
+}
