@@ -3,7 +3,7 @@
 
 Measure a RAG system before you ship it. A golden set with out-of-scope questions, an LLM judge, a validator that blocks answers with made-up citations or numbers, and a paired significance test that decides whether a change ships.
 
-At work I run a RAG assistant for an ERP support chat that handles about 1,000 conversations a day. Every change to retrieval, prompts or models goes through this kind of check before it reaches customers. This repo rebuilds the method in the open, on public documentation, so anyone can run it and read the code.
+At work I run a RAG assistant for an ERP support chat. Every change to retrieval, prompts or models goes through this kind of check before it reaches customers. This repo rebuilds the method in the open, on public documentation, so anyone can run it and read the code.
 
 **Live report:** [jessidc.github.io/rag-eval-bench](https://jessidc.github.io/rag-eval-bench/)
 
