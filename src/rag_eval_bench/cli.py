@@ -91,7 +91,8 @@ def cmd_report(args):
 
     pairs = [tuple(p.split(":", 1)) for p in args.pair] if args.pair else None
     path = write_report([Path(p) for p in args.runs], Path(args.out), baseline=args.baseline, pairs=pairs,
-                        title=args.title, notes=args.notes, second_judge=args.second_judge)
+                        title=args.title, notes=args.notes, second_judge=args.second_judge,
+                        limits=args.limit_note, source=args.source)
     print(f"report written to {path}")
 
 
@@ -166,6 +167,8 @@ def main(argv=None):
     s.add_argument("--title", default="RAG evaluation report")
     s.add_argument("--notes", default="")
     s.add_argument("--second-judge", help="folder with the same runs graded by another judge (from rageval rejudge)")
+    s.add_argument("--limit-note", action="append", help="a known limit of this evaluation, shown in the report (repeatable)")
+    s.add_argument("--source", default="", help="link to the code and data behind the report")
     s.add_argument("--out", default="report/index.html")
     s.set_defaults(fn=cmd_report)
 
