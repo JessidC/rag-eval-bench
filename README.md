@@ -1,4 +1,5 @@
 # rag-eval-bench
+[![tests](https://github.com/JessidC/rag-eval-bench/actions/workflows/tests.yml/badge.svg)](https://github.com/JessidC/rag-eval-bench/actions/workflows/tests.yml)
 
 Measure a RAG system before you ship it. A golden set with out-of-scope questions, an LLM judge, a validator that blocks answers with made-up citations or numbers, and a paired significance test that decides whether a change ships.
 
